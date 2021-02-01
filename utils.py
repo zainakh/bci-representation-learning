@@ -2,6 +2,9 @@ import numpy as np
 import scipy.io as sio
 import matplotlib.pyplot as plt
 
+import time
+
+
 def read_data_sets():
     """
     Returns:
@@ -9,32 +12,54 @@ def read_data_sets():
     """
     erp, pupil = [], []
 
-    erp_root_dir = '/home/zainkhan/Desktop/NiDyN/ERP_Images/'
-    pupil_root_dir = '/home/zainkhan/Desktop/NiDyN/Pupil_Images/'
+    erp_root_dir = "/home/zainkhan/Desktop/NiDyN/ERP_Images/"
+    pupil_root_dir = "/home/zainkhan/Desktop/NiDyN/Pupil_Images/"
 
     subjects = [i for i in range(8, 17)]
-    conditions = ['free', 'eye']
+    conditions = ["free", "eye"]
 
     for sub in subjects:
         for condition in conditions:
-            erp_path = erp_root_dir + 'ERP_Image_s' + str(sub) + '_' + condition + '.mat'
+            erp_path = (
+                erp_root_dir + "ERP_Image_s" + str(sub) + "_" + condition + ".mat"
+            )
             erp_dict = sio.loadmat(erp_path)
-            erp.append(erp_dict['erp_cat'])
-            
-            pupil_path = pupil_root_dir + 'Pupil_Image_s' + str(sub) + '_' + condition + '.mat'
+            erp.append(erp_dict["erp_cat"])
+
+            pupil_path = (
+                pupil_root_dir + "Pupil_Image_s" + str(sub) + "_" + condition + ".mat"
+            )
             pupil_dict = sio.loadmat(pupil_path)
-            pupil.append(pupil_dict['pupil_cat'])
+            pupil.append(pupil_dict["pupil_cat"])
 
-    return(erp, pupil)
+    erp = np.array(erp)
+    erp = erp[..., np.newaxis]
+    pupil = np.array(pupil)
+    pupil = pupil[..., np.newaxis]
+
+    return (erp, pupil)
 
 
-def plot_reconstructions():
-    from sklearn.metrics import mean_squared_error 
+def get_filename(prefix, suffix):
+    """
+    Returns:
+        Datetime in form of string with string prefix and suffix.
+    """
+    timestr = time.strftime("%Y_%m_%d-%H_%M-")
+    filename = prefix + timestr + suffix
+    return filename
 
-    rec = np.load('data/test_rec.npy')
+
+def display_errors():
+    """
+    Prints various error values based on the reconstructed images.
+    """
+    from sklearn.metrics import mean_squared_error
+
+    rec = np.load("data/test_rec.npy")
     rec = rec[0]
     rec = (rec - np.min(rec)) / (np.max(rec) - np.min(rec))
-    plt.imshow(rec) 
+    plt.imshow(rec)
     plt.show()
 
     erp, _ = read_data_sets()
@@ -54,4 +79,5 @@ def plot_reconstructions():
     rms = np.sqrt(mean_squared_error(erp, third))
     print(rms)
 
-#plot_reconstructions()
+
+# plot_reconstructions()

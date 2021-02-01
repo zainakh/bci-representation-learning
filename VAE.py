@@ -5,7 +5,13 @@ from tensorflow.keras import layers
 
 from Sampling import Sampling
 
+
 class VAE(keras.Model):
+    """
+    This class stores a variational autoencoder setup meant to learn EEG representations when presented
+    in the form of an image. 
+    """
+
     def __init__(self, beta, latent_dim, **kwargs):
         super(VAE, self).__init__(**kwargs)
         self.beta = beta
@@ -17,7 +23,9 @@ class VAE(keras.Model):
         self.kl_loss_tracker = keras.metrics.Mean(name="kl_loss")
 
         encoder_inputs = keras.Input(shape=(64, 768, 1))
-        x = layers.Conv2D(32, 6, activation="relu", strides=2, padding="same")(encoder_inputs)
+        x = layers.Conv2D(32, 6, activation="relu", strides=2, padding="same")(
+            encoder_inputs
+        )
         x = layers.Conv2D(32, 6, activation="relu", strides=2, padding="same")(x)
         x = layers.Flatten()(x)
         x = layers.Dense(128, activation="relu")(x)
@@ -26,18 +34,30 @@ class VAE(keras.Model):
         z = Sampling()([z_mean, z_log_var])
         encoder = keras.Model(encoder_inputs, [z_mean, z_log_var, z], name="encoder")
         self.encoder = encoder
+        encoder.summary()
 
         latent_inputs = keras.Input(shape=(self.latent_dim,))
         x = layers.Dense(16 * 192 * 32, activation="relu")(latent_inputs)
         x = layers.Reshape((16, 192, 32))(x)
-        x = layers.Conv2DTranspose(32, 6, activation="relu", strides=2, padding="same")(x)
-        x = layers.Conv2DTranspose(32, 6, activation="relu", strides=2, padding="same")(x)
-        decoder_outputs = layers.Conv2DTranspose(1, 3, activation="sigmoid", padding="same")(x)
+        x = layers.Conv2DTranspose(32, 6, activation="relu", strides=2, padding="same")(
+            x
+        )
+        x = layers.Conv2DTranspose(32, 6, activation="relu", strides=2, padding="same")(
+            x
+        )
+        decoder_outputs = layers.Conv2DTranspose(
+            1, 3, activation="sigmoid", padding="same"
+        )(x)
         decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
         self.decoder = decoder
+        decoder.summary()
 
     @property
     def metrics(self):
+        """
+        Returns:
+            List of total loss, reconstruction loss, and KL loss.
+        """
         return [
             self.total_loss_tracker,
             self.reconstruction_loss_tracker,
@@ -49,6 +69,12 @@ class VAE(keras.Model):
         Assume Bernoulli distribution for lielihood on each pixel (hence use binary
         cross entropy for reconstruction error). If assuming Gaussian, use MSE in place
         of this (may end up focusing on a few pixels that are very wrong though). 
+
+        Input: 
+            Takes in EEG data of size ( , 64, 768).
+
+        Returns:
+            Returns training loss of the model trained on the data.
         """
         with tf.GradientTape() as tape:
             z_mean, z_log_var, z = self.encoder(data)
