@@ -107,7 +107,7 @@ class CAN(keras.Model):
             vae_data_dist = tfp.distributions.Normal(z_vae_mean, z_vae_log_var)
             data_dist = tfp.distributions.Normal(z_mean, z_log_var)
             kl_bimodal_loss = tfp.distributions.kl_divergence(vae_data_dist, data_dist)
-            total_loss = reconstruction_loss + kl_loss + kl_bimodal_loss
+            total_loss = tf.reduce_mean(reconstruction_loss + kl_loss) + kl_bimodal_loss
         grads = tape.gradient(total_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         self.total_loss_tracker.update_state(total_loss)
