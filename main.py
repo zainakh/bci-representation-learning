@@ -39,20 +39,19 @@ def main():
         can.fit(pupil_train, epochs=can_epoch, batch_size=can_batch_size)
 
         # Save models
-        vae.encoder.save('vae_encoder')
-        vae.decoder.save('vae_decoder') 
-        can.encoder.save('can_encoder')
-        can.decoder.save('can_decoder')
+        vae.encoder.save("vae_encoder")
+        vae.decoder.save("vae_decoder")
+        can.encoder.save("can_encoder")
+        can.decoder.save("can_decoder")
     else:
         # Load all encoders/decoders
         vae = VAE(beta=beta_eeg, latent_dim=latent_dim)
-        vae.encoder = keras.models.load_model('vae_encoder')
-        vae.decoder = keras.models.load_model('vae_decoder')
+        vae.encoder = keras.models.load_model("vae_encoder")
+        vae.decoder = keras.models.load_model("vae_decoder")
 
         can = CAN(vae=vae, vae_data=erp_train, latent_dim=latent_dim)
-        can.encoder = keras.models.load_model('can_encoder')
-        can.decoder = keras.models.load_model('can_decoder')
-
+        can.encoder = keras.models.load_model("can_encoder")
+        can.decoder = keras.models.load_model("can_decoder")
 
     # VAE predictions
     encoded_data = vae.encoder.predict(erp_test)
