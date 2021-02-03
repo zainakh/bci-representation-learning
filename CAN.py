@@ -44,7 +44,6 @@ class CAN(keras.Model):
             encoder_inputs, [z_mean, z_log_var, z], name="san_encoder"
         )
         self.encoder = encoder
-        encoder.summary()
 
         latent_inputs = keras.Input(shape=(self.latent_dim,))
         x = layers.Dense(1 * 35 * 8, activation="relu")(latent_inputs)
@@ -60,7 +59,6 @@ class CAN(keras.Model):
         )(x)
         decoder = keras.Model(latent_inputs, decoder_outputs, name="san_decoder")
         self.decoder = decoder
-        decoder.summary()
 
     @property
     def metrics(self):

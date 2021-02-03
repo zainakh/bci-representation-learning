@@ -4,7 +4,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
 
-from utils import read_data_sets, get_filename
+import utils
 from Sampling import Sampling
 from VAE import VAE
 from CAN import CAN
@@ -22,9 +22,9 @@ def main():
     train = False
 
     # Read data sets
-    erp, pupil = read_data_sets()
+    erp, pupil = utils.read_data_sets()
     erp_train, erp_test, pupil_train, pupil_test = train_test_split(
-        erp, pupil, test_size=test_split
+        erp, pupil, test_size=test_split, random_state=42
     )
 
     if train:
@@ -56,13 +56,9 @@ def main():
     # VAE predictions
     encoded_data = vae.encoder.predict(erp_test)
     decoded_data = vae.decoder.predict(encoded_data)
-    fn = get_filename("erp_predictions/", "test-erp")
-    # np.save(fn, decoded_data)
-
-    encoded_data = vae.encoder.predict(erp)
-    decoded_data = vae.decoder.predict(encoded_data)
-    fn = get_filename("erp_predictions/", "all-erp")
-    # np.save(fn, decoded_data)
+    fn = utils.get_filename("predictions/", "test-erp")
+    #np.save(fn, decoded_data)
+    utils.plot_erp_reconstructions(erp_test, decoded_data)
 
 
 if __name__ == "__main__":

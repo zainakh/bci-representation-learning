@@ -34,7 +34,6 @@ class VAE(keras.Model):
         z = Sampling()([z_mean, z_log_var])
         encoder = keras.Model(encoder_inputs, [z_mean, z_log_var, z], name="encoder")
         self.encoder = encoder
-        encoder.summary()
 
         latent_inputs = keras.Input(shape=(self.latent_dim,))
         x = layers.Dense(16 * 192 * 32, activation="relu")(latent_inputs)
@@ -50,7 +49,6 @@ class VAE(keras.Model):
         )(x)
         decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
         self.decoder = decoder
-        decoder.summary()
 
     @property
     def metrics(self):

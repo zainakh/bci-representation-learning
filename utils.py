@@ -40,44 +40,22 @@ def read_data_sets():
     return (erp, pupil)
 
 
-def get_filename(prefix, suffix):
+def get_filename(prefix, name):
     """
     Returns:
         Datetime in form of string with string prefix and suffix.
     """
-    timestr = time.strftime("%Y_%m_%d-%H_%M-")
-    filename = prefix + timestr + suffix
+    timestr = time.strftime("-%Y_%m_%d-%H_%M")
+    filename = prefix + name + timestr
     return filename
 
 
-def display_errors():
+def display_errors(image, reconstruction):
     """
-    Prints various error values based on the reconstructed images.
+    Prints RMSE error value based on the reconstructed image.
     """
     from sklearn.metrics import mean_squared_error
-
-    rec = np.load("data/test_rec.npy")
-    rec = rec[0]
-    rec = (rec - np.min(rec)) / (np.max(rec) - np.min(rec))
-    plt.imshow(rec)
-    plt.show()
-
-    erp, _ = read_data_sets()
-    third = erp[2]
-    second = erp[1]
-    erp = erp[0]
-    plt.imshow(erp)
-    plt.show()
-
-    erp = np.squeeze(erp)
-    rec = np.squeeze(rec)
-    second = np.squeeze(second)
-    rms = np.sqrt(mean_squared_error(erp, rec))
-    print(rms)
-    rms = np.sqrt(mean_squared_error(erp, second))
-    print(rms)
-    rms = np.sqrt(mean_squared_error(erp, third))
-    print(rms)
+    return np.sqrt(mean_squared_error(image, reconstruction))
 
 
-# plot_reconstructions()
+
