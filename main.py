@@ -16,25 +16,24 @@ def main():
     vae_batch_size = 128
     latent_dim = 10
     beta_eeg = 1.0
-    test_split = 0.2
     can_epoch = 10000
     can_batch_size = 16
-    train = False
+    train = True
 
     # Read data sets
-    erp, pupil = utils.read_data_sets()
-    erp_train, erp_test, pupil_train, pupil_test = train_test_split(
-        erp, pupil, test_size=test_split, random_state=42
+    eeg, pupil = utils.read_single_trial_datasets()
+    eeg_train, eeg_test, pupil_train, pupil_test = train_test_split(
+        eeg, pupil, test_size=0.2, random_state=42
     )
 
     if train:
         # Train VAE
         vae = VAE(beta=beta_eeg, latent_dim=latent_dim)
         vae.compile(optimizer=keras.optimizers.Adam())
-        vae.fit(erp_train, epochs=vae_epoch, batch_size=vae_batch_size)
+        vae.fit(eeg_train, epochs=vae_epoch, batch_size=vae_batch_size)
 
         # Train CAN
-        can = CAN(vae=vae, vae_data=erp_train, latent_dim=latent_dim)
+        can = CAN(vae=vae, vae_data=eeg_train, latent_dim=latent_dim)
         can.compile(optimizer=keras.optimizers.Adam())
         can.fit(pupil_train, epochs=can_epoch, batch_size=can_batch_size)
 
@@ -49,16 +48,15 @@ def main():
         vae.encoder = keras.models.load_model("vae_encoder")
         vae.decoder = keras.models.load_model("vae_decoder")
 
-        can = CAN(vae=vae, vae_data=erp_train, latent_dim=latent_dim)
+        can = CAN(vae=vae, vae_data=eeg_train, latent_dim=latent_dim)
         can.encoder = keras.models.load_model("can_encoder")
         can.decoder = keras.models.load_model("can_decoder")
 
     # VAE predictions
-    encoded_data = vae.encoder.predict(erp_test)
+    encoded_data = vae.encoder.predict(eeg_test)
     decoded_data = vae.decoder.predict(encoded_data)
-    fn = utils.get_filename("predictions/", "test-erp")
-    #np.save(fn, decoded_data)
-    utils.plot_erp_reconstructions(erp_test, decoded_data)
+    fn = utils.get_filename("predictions/", "test-eeg")
+    # np.save(fn, decoded_data)
 
 
 if __name__ == "__main__":
