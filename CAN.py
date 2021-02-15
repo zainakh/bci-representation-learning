@@ -16,7 +16,9 @@ class CAN(keras.Model):
     taking in a continuous stream of data and a classification label.
     """
 
-    def __init__(self, vae, vae_data, latent_dim, **kwargs):
+    def __init__(
+        self, vae, can_data, vae_data, latent_dim, epochs, batch_size, **kwargs
+    ):
         super(CAN, self).__init__(**kwargs)
         self.latent_dim = latent_dim
         self.total_loss_tracker = keras.metrics.Mean(name="total_loss")
@@ -28,7 +30,12 @@ class CAN(keras.Model):
 
         self.trained_encoder = vae.encoder
         self.trained_decoder = vae.decoder
+
+        self.can_data_sum = np.array([np.sum(can_data[i,:,:,:]) for i in range(can_data.shape[0])])
         self.vae_data = vae_data
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.iter = 0
 
         encoder_inputs = keras.Input(shape=(2, 140, 1))
         x = layers.Conv2D(8, 2, activation="relu", strides=2, padding="same")(
@@ -101,7 +108,12 @@ class CAN(keras.Model):
             )
             kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
             kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
-            z_vae_mean, z_vae_log_var, z_vae = self.trained_encoder(self.vae_data)
+            data_np = data.numpy()
+            data_sum = np.array([np.sum(data_np[i,:,:,:]) for i in range(data_np.shape[0])])
+            idx = np.nonzero(np.in1d(self.can_data_sum, data_sum))
+            vae_batch_data = np.take(self.vae_data, idx, axis=0)
+            vae_batch_data = vae_batch_data.reshape(vae_batch_data.shape[1:])
+            z_vae_mean, z_vae_log_var, z_vae = self.trained_encoder(vae_batch_data)
             vae_data_dist = tfp.distributions.Normal(z_vae_mean, z_vae_log_var)
             data_dist = tfp.distributions.Normal(z_mean, z_log_var)
             kl_bimodal_loss = tfp.distributions.kl_divergence(vae_data_dist, data_dist)
@@ -112,6 +124,7 @@ class CAN(keras.Model):
         self.reconstruction_loss_tracker.update_state(reconstruction_loss)
         self.kl_loss_tracker.update_state(kl_loss)
         self.kl_bimodal_loss_tracker.update_state(kl_bimodal_loss)
+        self.iter += 1
         return {
             "loss": self.total_loss_tracker.result(),
             "reconstruction_loss": self.reconstruction_loss_tracker.result(),

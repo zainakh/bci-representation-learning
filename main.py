@@ -12,40 +12,42 @@ from CAN import CAN
 
 def main():
     # Set parameters
-    vae_epoch = 100
-    vae_batch_size = 128
+    vae_epoch = 1000
+    can_epoch = 1000
+    batch_size = 64
     latent_dim = 10
     beta_eeg = 5.0
-    can_epoch = 100
-    can_batch_size = 16
     train = True
 
     # Read data sets
-    eeg, pupil = utils.read_single_trial_datasets()
-    eeg_train, eeg_test, pupil_train, pupil_test = train_test_split(
-        eeg, pupil, test_size=0.2, shuffle=False
-    )
+    eeg_train, eeg_test, pupil_train, pupil_test = utils.read_single_trial_datasets()
+    print(eeg_train.shape)
+    print(eeg_test.shape)
+    print(pupil_train.shape)
+    print(pupil_test.shape)
+
 
     if train:
-        '''
         # Train VAE
         vae = VAE(beta=beta_eeg, latent_dim=latent_dim)
         vae.compile(optimizer=keras.optimizers.Adam())
-        vae.fit(eeg_train, epochs=vae_epoch, batch_size=vae_batch_size)
+        vae.fit(eeg_train, epochs=vae_epoch, batch_size=batch_size)
 
         # Save VAE
         vae.encoder.save("vae_encoder")
         vae.decoder.save("vae_decoder")
-        '''
-
-        vae = VAE(beta=beta_eeg, latent_dim=latent_dim)
-        vae.encoder = keras.models.load_model("vae_encoder")
-        vae.decoder = keras.models.load_model("vae_decoder")
 
         # Train CAN
-        can = CAN(vae=vae, vae_data=eeg_train, latent_dim=latent_dim)
-        can.compile(optimizer=keras.optimizers.Adam())
-        can.fit(pupil_train, epochs=can_epoch, batch_size=can_batch_size)
+        can = CAN(
+            vae=vae,
+            can_data=pupil_train,
+            vae_data=eeg_train,
+            latent_dim=latent_dim,
+            epochs=can_epoch,
+            batch_size=batch_size,
+        )
+        can.compile(optimizer=keras.optimizers.Adam(), run_eagerly=True)
+        can.fit(pupil_train, epochs=can_epoch, batch_size=batch_size, shuffle=False)
 
         # Save CAN
         can.encoder.save("can_encoder")

@@ -45,7 +45,8 @@ def read_single_trial_datasets():
     Returns:
         Data queues of single trial EEG and pupil data.
     """
-    eeg, pupil = [], []
+    eeg_train, pupil_train = [], []
+    eeg_test, pupil_test = [], []
 
     eeg_root_dir = "/home/zainkhan/Desktop/EEG_Data/"
     pupil_root_dir = "/home/zainkhan/Desktop/Pupil_Data/"
@@ -81,31 +82,42 @@ def read_single_trial_datasets():
 
             # Remove additional trails that pupil may have that EEG does not
             trials = eeg_images.shape[-1]
-            pupil_images = pupil_images[:,:,0:trials]
+            pupil_images = pupil_images[:, :, 0:trials]
 
             # Pupil only concerned with left and right eye pupil size streams
-            pupil_images = pupil_images[(0, 5),:,:]
+            pupil_images = pupil_images[(0, 5), :, :]
 
             # Min max normalize
             for trial in range(trials):
                 eeg_images[:, :, trial] = min_max_normalize(eeg_images[:, :, trial])
                 pupil_images[:, :, trial] = min_max_normalize(pupil_images[:, :, trial])
 
-            if (not len(eeg)) and (not len(pupil)):
-                eeg = eeg_images
-                pupil = pupil_images
+            if (not len(eeg_train)) and (not len(pupil_train)):
+                eeg_train = eeg_images
+                pupil_train = pupil_images
             else:
-                # Append to existing
-                eeg = np.dstack([eeg, eeg_images])
-                pupil = np.dstack([pupil, pupil_images])
+                if sub > 14:
+                    if (not len(eeg_test)) and (not len(pupil_test)): 
+                        eeg_test = eeg_images
+                        pupil_test = pupil_images
+                    else:
+                        eeg_test = np.dstack([eeg_test, eeg_images])
+                        pupil_test = np.dstack([pupil_test, pupil_images])
+                else:
+                    eeg_train = np.dstack([eeg_train, eeg_images])
+                    pupil_train = np.dstack([pupil_train, pupil_images])
 
-    eeg = np.rollaxis(eeg, 2, 0)
-    pupil = np.rollaxis(pupil, 2, 0)
+    eeg_train = np.rollaxis(eeg_train, 2, 0)
+    pupil_train = np.rollaxis(pupil_train, 2, 0)
+    eeg_test = np.rollaxis(eeg_test, 2, 0)
+    pupil_test = np.rollaxis(pupil_test, 2, 0)
 
-    eeg = eeg[..., np.newaxis]
-    pupil = pupil[..., np.newaxis]
+    eeg_train = eeg_train[..., np.newaxis]
+    pupil_train = pupil_train[..., np.newaxis]
+    eeg_test = eeg_test[..., np.newaxis]
+    pupil_test = pupil_test[..., np.newaxis]
 
-    return (eeg, pupil)
+    return (eeg_train, eeg_test, pupil_train, pupil_test)
 
 
 def get_filename(prefix, name):
