@@ -21,10 +21,6 @@ def main():
 
     # Read data sets
     eeg_train, eeg_test, pupil_train, pupil_test = utils.read_single_trial_datasets()
-    print(eeg_train.shape)
-    print(eeg_test.shape)
-    print(pupil_train.shape)
-    print(pupil_test.shape)
 
 
     if train:
