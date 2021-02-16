@@ -35,7 +35,6 @@ class CAN(keras.Model):
         self.vae_data = vae_data
         self.epochs = epochs
         self.batch_size = batch_size
-        self.iter = 0
 
         encoder_inputs = keras.Input(shape=(2, 140, 1))
         x = layers.Conv2D(8, 2, activation="relu", strides=2, padding="same")(
@@ -114,8 +113,8 @@ class CAN(keras.Model):
             vae_batch_data = np.take(self.vae_data, idx, axis=0)
             vae_batch_data = vae_batch_data.reshape(vae_batch_data.shape[1:])
             z_vae_mean, z_vae_log_var, z_vae = self.trained_encoder(vae_batch_data)
-            vae_data_dist = tfp.distributions.Normal(z_vae_mean, z_vae_log_var)
-            data_dist = tfp.distributions.Normal(z_mean, z_log_var)
+            vae_data_dist = tfp.distributions.Normal(z_vae_mean, tf.exp(z_vae_log_var))
+            data_dist = tfp.distributions.Normal(z_mean, tf.exp(z_log_var))
             kl_bimodal_loss = tfp.distributions.kl_divergence(vae_data_dist, data_dist)
             total_loss = tf.reduce_mean(reconstruction_loss + kl_loss) + kl_bimodal_loss
         grads = tape.gradient(total_loss, self.trainable_weights)
@@ -124,10 +123,10 @@ class CAN(keras.Model):
         self.reconstruction_loss_tracker.update_state(reconstruction_loss)
         self.kl_loss_tracker.update_state(kl_loss)
         self.kl_bimodal_loss_tracker.update_state(kl_bimodal_loss)
-        self.iter += 1
         return {
             "loss": self.total_loss_tracker.result(),
             "reconstruction_loss": self.reconstruction_loss_tracker.result(),
             "kl_loss": self.kl_loss_tracker.result(),
             "kl_bimodal_loss": self.kl_bimodal_loss_tracker.result(),
         }
+

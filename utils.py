@@ -40,7 +40,7 @@ def read_erp_datasets():
     return (erp, pupil)
 
 
-def read_single_trial_datasets():
+def read_single_trial_datasets(data_root, normalization='z'):
     """
     Returns:
         Data queues of single trial EEG and pupil data.
@@ -48,8 +48,8 @@ def read_single_trial_datasets():
     eeg_train, pupil_train = [], []
     eeg_test, pupil_test = [], []
 
-    eeg_root_dir = "/home/zainkhan/Desktop/EEG_Data/"
-    pupil_root_dir = "/home/zainkhan/Desktop/Pupil_Data/"
+    eeg_root_dir = data_root + "/EEG_Data/"
+    pupil_root_dir = data_root + "/Pupil_Data/"
 
     subjects = [i for i in range(8, 17)]
     conditions = ["free", "eye"]
@@ -89,8 +89,12 @@ def read_single_trial_datasets():
 
             # Min max normalize
             for trial in range(trials):
-                eeg_images[:, :, trial] = min_max_normalize(eeg_images[:, :, trial])
-                pupil_images[:, :, trial] = min_max_normalize(pupil_images[:, :, trial])
+                if normalization == 'z':
+                    eeg_images[:, :, trial] = z_score_normalize(eeg_images[:, :, trial])
+                    pupil_images[:, :, trial] = z_score_normalize(pupil_images[:, :, trial])
+                elif normalization == 'mm':
+                    eeg_images[:, :, trial] = min_max_normalize(eeg_images[:, :, trial])
+                    pupil_images[:, :, trial] = min_max_normalize(pupil_images[:, :, trial])
 
             if (not len(eeg_train)) and (not len(pupil_train)):
                 eeg_train = eeg_images
@@ -141,3 +145,6 @@ def display_errors(image, reconstruction):
 
 def min_max_normalize(arr):
     return (arr - np.min(arr)) / (np.max(arr) - np.min(arr))
+
+def z_score_normalize(arr):
+    return (arr - np.mean(arr)) / np.std(arr)
