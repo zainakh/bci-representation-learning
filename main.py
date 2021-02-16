@@ -22,7 +22,6 @@ def main():
     # Read data sets
     eeg_train, eeg_test, pupil_train, pupil_test = utils.read_single_trial_datasets()
 
-
     if train:
         # Train VAE
         vae = VAE(beta=beta_eeg, latent_dim=latent_dim)

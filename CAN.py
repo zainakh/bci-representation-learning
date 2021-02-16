@@ -31,7 +31,9 @@ class CAN(keras.Model):
         self.trained_encoder = vae.encoder
         self.trained_decoder = vae.decoder
 
-        self.can_data_sum = np.array([np.sum(can_data[i,:,:,:]) for i in range(can_data.shape[0])])
+        self.can_data_sum = np.array(
+            [np.sum(can_data[i, :, :, :]) for i in range(can_data.shape[0])]
+        )
         self.vae_data = vae_data
         self.epochs = epochs
         self.batch_size = batch_size
@@ -101,14 +103,14 @@ class CAN(keras.Model):
             z_mean, z_log_var, z = self.encoder(data)
             reconstruction = self.decoder(z)
             reconstruction_loss = tf.reduce_mean(
-                tf.reduce_sum(
-                    keras.losses.MSE(data, reconstruction), axis=(1, 2)
-                )
+                tf.reduce_sum(keras.losses.MSE(data, reconstruction), axis=(1, 2))
             )
             kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
             kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
             data_np = data.numpy()
-            data_sum = np.array([np.sum(data_np[i,:,:,:]) for i in range(data_np.shape[0])])
+            data_sum = np.array(
+                [np.sum(data_np[i, :, :, :]) for i in range(data_np.shape[0])]
+            )
             idx = np.nonzero(np.in1d(self.can_data_sum, data_sum))
             vae_batch_data = np.take(self.vae_data, idx, axis=0)
             vae_batch_data = vae_batch_data.reshape(vae_batch_data.shape[1:])
@@ -129,4 +131,3 @@ class CAN(keras.Model):
             "kl_loss": self.kl_loss_tracker.result(),
             "kl_bimodal_loss": self.kl_bimodal_loss_tracker.result(),
         }
-
