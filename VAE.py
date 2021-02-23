@@ -44,9 +44,7 @@ class VAE(keras.Model):
         x = layers.Conv2DTranspose(32, 6, activation="relu", strides=2, padding="same")(
             x
         )
-        decoder_outputs = layers.Conv2DTranspose(
-            1, 3, activation="sigmoid", padding="same"
-        )(x)
+        decoder_outputs = layers.Conv2DTranspose(1, 3, padding="same")(x)
         decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
         self.decoder = decoder
 

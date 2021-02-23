@@ -84,7 +84,7 @@ def read_single_trial_datasets(data_root, normalization="z"):
     pupil_train = np.rollaxis(pupil_train, 2, 0)
     eeg_test = np.rollaxis(eeg_test, 2, 0)
     pupil_test = np.rollaxis(pupil_test, 2, 0)
-
+    
     eeg_train = eeg_train[..., np.newaxis]
     pupil_train = pupil_train[..., np.newaxis]
     eeg_test = eeg_test[..., np.newaxis]
@@ -159,6 +159,16 @@ def read_dataset_by_condition(data_root, normalization="z"):
         pupil_eye[i] = (pupil_eye[i])[..., np.newaxis]
 
     return (eeg_free, eeg_eye, pupil_free, pupil_eye)
+
+
+def remove_noisy_trials(eeg_train, eeg_test):
+    noisy_train = np.load('noisy_train.npy')
+    noisy_test = np.load('noisy_test.npy')
+    
+    eeg_train = np.delete(eeg_train, noisy_train, axis=0)
+    eeg_test = np.delete(eeg_test, noisy_test, axis=0)
+    
+    return (eeg_train, eeg_test)
 
 
 def read_erp_datasets():
