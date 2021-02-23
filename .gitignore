@@ -1,6 +1,12 @@
 .vscode/*
 __pycache__/*
-data/*
+
+EEG_Data/*
+Pupil_Data/*
+plots/*
+
 .ipynb_checkpoints/*
-erp_predictions/*
-pupil_predictions/*
+*.zip
+
+vae_*/*
+can_*/*

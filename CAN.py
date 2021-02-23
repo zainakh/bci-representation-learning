@@ -31,8 +31,10 @@ class CAN(keras.Model):
         self.trained_encoder = vae.encoder
         self.trained_decoder = vae.decoder
 
-        self.can_data_sum = np.array(
-            [np.sum(can_data[i, :, :, :]) for i in range(can_data.shape[0])]
+        # Use max as hash function to match EEG + pupil data during training
+        # in order to compare their distributions
+        self.can_data_max = np.array(
+            [np.max(can_data[i, :, :, :]) for i in range(can_data.shape[0])]
         )
         self.vae_data = vae_data
         self.epochs = epochs
@@ -108,15 +110,16 @@ class CAN(keras.Model):
             kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
             kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
             data_np = data.numpy()
-            data_sum = np.array(
-                [np.sum(data_np[i, :, :, :]) for i in range(data_np.shape[0])]
+            data_max = np.array(
+                [np.max(data_np[i, :, :, :]) for i in range(data_np.shape[0])]
             )
-            idx = np.nonzero(np.in1d(self.can_data_sum, data_sum))
+            idx = np.nonzero(np.in1d(self.can_data_max, data_max))
+            idx = np.array(idx)
             vae_batch_data = np.take(self.vae_data, idx, axis=0)
             vae_batch_data = vae_batch_data.reshape(vae_batch_data.shape[1:])
             z_vae_mean, z_vae_log_var, z_vae = self.trained_encoder(vae_batch_data)
-            vae_data_dist = tfp.distributions.Normal(z_vae_mean, tf.exp(z_vae_log_var))
-            data_dist = tfp.distributions.Normal(z_mean, tf.exp(z_log_var))
+            vae_data_dist = tfp.distributions.Normal(z_vae_mean, np.sqrt(tf.exp(z_vae_log_var)))
+            data_dist = tfp.distributions.Normal(z_mean, np.sqrt(tf.exp(z_log_var)))
             kl_bimodal_loss = tfp.distributions.kl_divergence(vae_data_dist, data_dist)
             total_loss = tf.reduce_mean(reconstruction_loss + kl_loss) + kl_bimodal_loss
         grads = tape.gradient(total_loss, self.trainable_weights)

@@ -2,7 +2,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from sklearn.model_selection import train_test_split
 
 import utils
 from Sampling import Sampling
@@ -12,7 +11,7 @@ from CAN import CAN
 
 def main():
     # Set parameters
-    vae_epoch = 1000
+    vae_epoch = 2
     can_epoch = 1000
     batch_size = 64
     latent_dim = 10
@@ -20,7 +19,9 @@ def main():
     train = True
 
     # Read data sets
-    eeg_train, eeg_test, pupil_train, pupil_test = utils.read_single_trial_datasets()
+    data_root = "/home/zainkhan/Desktop"
+    eeg_train, eeg_test, pupil_train, pupil_test = utils.read_single_trial_datasets(data_root)
+
 
     if train:
         # Train VAE
@@ -29,8 +30,8 @@ def main():
         vae.fit(eeg_train, epochs=vae_epoch, batch_size=batch_size)
 
         # Save VAE
-        vae.encoder.save("vae_encoder")
-        vae.decoder.save("vae_decoder")
+        #vae.encoder.save("vae_encoder")
+        #vae.decoder.save("vae_decoder")
 
         # Train CAN
         can = CAN(
