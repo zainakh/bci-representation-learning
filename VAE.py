@@ -31,13 +31,15 @@ class VAE(keras.Model):
         x = layers.Conv2D(64, 6, activation="relu", strides=2, padding="same")(x)
         x = layers.Flatten()(x)
         x = layers.Dense(128, activation="relu")(x)
-        z_mean = layers.Dense(self.latent_dim, name="z_mean")(x)
-        z_log_var = layers.Dense(self.latent_dim, name="z_log_var")(x)
-        z = Sampling()([z_mean, z_log_var])
-        encoder = keras.Model(encoder_inputs, [z_mean, z_log_var, z], name="encoder")
+        #z_mean = layers.Dense(self.latent_dim, name="z_mean")(x)
+        #z_log_var = layers.Dense(self.latent_dim, name="z_log_var")(x)
+        #z = Sampling()([z_mean, z_log_var])
+        #encoder = keras.Model(encoder_inputs, [z_mean, z_log_var, z], name="encoder")
+        encoder = keras.Model(encoder_inputs, x, name="encoder")
         self.encoder = encoder
 
-        latent_inputs = keras.Input(shape=(self.latent_dim,))
+        #latent_inputs = keras.Input(shape=(self.latent_dim,))
+        latent_inputs = keras.Input(shape=(128,))
         x = layers.Dense(4 * 48 * 64, activation="relu")(latent_inputs)
         x = layers.Reshape((4, 48, 64))(x)
         x = layers.Conv2DTranspose(64, 6, activation="relu", strides=2, padding="same")(
@@ -81,13 +83,15 @@ class VAE(keras.Model):
             Returns training loss of the model trained on the data.
         """
         with tf.GradientTape() as tape:
-            z_mean, z_log_var, z = self.encoder(data)
+            #z_mean, z_log_var, z = self.encoder(data)
+            z = self.encoder(data)
             reconstruction = self.decoder(z)
             reconstruction_loss = tf.reduce_mean(
                 tf.reduce_sum(keras.losses.MSE(data, reconstruction), axis=(1, 2))
             )
-            kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
-            kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
+            #kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
+            #kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
+            kl_loss = 0
             total_loss = reconstruction_loss + self.beta * kl_loss
         grads = tape.gradient(total_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
