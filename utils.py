@@ -12,6 +12,8 @@ def read_single_trial_datasets(data_root, normalization="z"):
     """
     eeg_train, pupil_train = [], []
     eeg_test, pupil_test = [], []
+    
+    subject_cond = []
 
     eeg_root_dir = data_root + "/EEG_Data/"
     pupil_root_dir = data_root + "/Pupil_Data/"
@@ -51,6 +53,11 @@ def read_single_trial_datasets(data_root, normalization="z"):
         
             # Pupil only concerned with left and right eye pupil size streams
             pupil_images = pupil_images[(0, 5), :, :]
+            
+            # Keep track of info for later
+            info_list = trials*[[sub, condition]]
+            for elem in info_list:
+                subject_cond.append(elem)
 
             # Min max normalize
             for trial in range(trials):
@@ -79,6 +86,7 @@ def read_single_trial_datasets(data_root, normalization="z"):
                 else:
                     eeg_train = np.dstack([eeg_train, eeg_images])
                     pupil_train = np.dstack([pupil_train, pupil_images])
+            
 
     eeg_train = np.rollaxis(eeg_train, 2, 0)
     pupil_train = np.rollaxis(pupil_train, 2, 0)
@@ -89,8 +97,10 @@ def read_single_trial_datasets(data_root, normalization="z"):
     pupil_train = pupil_train[..., np.newaxis]
     eeg_test = eeg_test[..., np.newaxis]
     pupil_test = pupil_test[..., np.newaxis]
+    
+    subject_cond = np.array(subject_cond)
 
-    return (eeg_train, eeg_test, pupil_train, pupil_test)
+    return (eeg_train, eeg_test, pupil_train, pupil_test, subject_cond)
 
 def read_dataset_by_condition(data_root, normalization="z"):
     """

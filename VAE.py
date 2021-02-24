@@ -23,10 +23,12 @@ class VAE(keras.Model):
         self.kl_loss_tracker = keras.metrics.Mean(name="kl_loss")
 
         encoder_inputs = keras.Input(shape=(64, 768, 1))
-        x = layers.Conv2D(32, 6, activation="relu", strides=2, padding="same")(
+        x = layers.Conv2D(64, 6, activation="relu", strides=2, padding="same")(
             encoder_inputs
         )
-        x = layers.Conv2D(32, 6, activation="relu", strides=2, padding="same")(x)
+        x = layers.Conv2D(64, 6, activation="relu", strides=2, padding="same")(x)
+        x = layers.Conv2D(64, 6, activation="relu", strides=2, padding="same")(x)
+        x = layers.Conv2D(64, 6, activation="relu", strides=2, padding="same")(x)
         x = layers.Flatten()(x)
         x = layers.Dense(128, activation="relu")(x)
         z_mean = layers.Dense(self.latent_dim, name="z_mean")(x)
@@ -36,12 +38,18 @@ class VAE(keras.Model):
         self.encoder = encoder
 
         latent_inputs = keras.Input(shape=(self.latent_dim,))
-        x = layers.Dense(16 * 192 * 32, activation="relu")(latent_inputs)
-        x = layers.Reshape((16, 192, 32))(x)
-        x = layers.Conv2DTranspose(32, 6, activation="relu", strides=2, padding="same")(
+        x = layers.Dense(4 * 48 * 64, activation="relu")(latent_inputs)
+        x = layers.Reshape((4, 48, 64))(x)
+        x = layers.Conv2DTranspose(64, 6, activation="relu", strides=2, padding="same")(
             x
         )
-        x = layers.Conv2DTranspose(32, 6, activation="relu", strides=2, padding="same")(
+        x = layers.Conv2DTranspose(64, 6, activation="relu", strides=2, padding="same")(
+            x
+        )        
+        x = layers.Conv2DTranspose(64, 6, activation="relu", strides=2, padding="same")(
+            x
+        )        
+        x = layers.Conv2DTranspose(64, 6, activation="relu", strides=2, padding="same")(
             x
         )
         decoder_outputs = layers.Conv2DTranspose(1, 3, padding="same")(x)

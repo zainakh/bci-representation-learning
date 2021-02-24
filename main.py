@@ -19,9 +19,8 @@ def main():
     train = True
 
     # Read data sets
-    data_root = "/home/zainkhan/Desktop"
-    eeg_train, eeg_test, pupil_train, pupil_test = utils.read_single_trial_datasets(data_root)
-
+    data_root = "/home/zainkhan/bci-representation-learning"
+    eeg_train, eeg_test, pupil_train, pupil_test, sub_cond = utils.read_single_trial_datasets(data_root)
 
     if train:
         # Train VAE
