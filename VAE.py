@@ -31,6 +31,7 @@ class VAE(keras.Model):
         x = layers.Conv2D(64, 6, activation="relu", strides=2, padding="same")(x)
         x = layers.Flatten()(x)
         x = layers.Dense(128, activation="relu")(x)
+        x = layers.Dense(self.latent_dim, activation="relu")(x)
         #z_mean = layers.Dense(self.latent_dim, name="z_mean")(x)
         #z_log_var = layers.Dense(self.latent_dim, name="z_log_var")(x)
         #z = Sampling()([z_mean, z_log_var])
@@ -38,8 +39,7 @@ class VAE(keras.Model):
         encoder = keras.Model(encoder_inputs, x, name="encoder")
         self.encoder = encoder
 
-        #latent_inputs = keras.Input(shape=(self.latent_dim,))
-        latent_inputs = keras.Input(shape=(128,))
+        latent_inputs = keras.Input(shape=(self.latent_dim,))
         x = layers.Dense(4 * 48 * 64, activation="relu")(latent_inputs)
         x = layers.Reshape((4, 48, 64))(x)
         x = layers.Conv2DTranspose(64, 6, activation="relu", strides=2, padding="same")(
